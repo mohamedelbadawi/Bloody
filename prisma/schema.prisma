@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@localhost:3305/bloodbank"
+}
+
+model bloodtype {
+  id            String         @id @default(uuid())
+  bloodTypeName String         @unique(map: "BloodType_bloodTypeName_key")
+  user          user[]
+  bloodRequest  bloodRequest[]
+}
+
+model user {
+  id          String         @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String         @unique(map: "User_email_key")
+  phone       String
+  address     String
+  password    String
+  BloodType   bloodtype      @relation(fields: [bloodTypeId], references: [id])
+  bloodTypeId String
+  requests    bloodRequest[] @relation("receiver")
+  donatiions  bloodRequest[] @relation("donor")
+
+  @@index([id, email])
+}
+
+model bloodRequest {
+  id                  String             @id @default(uuid())
+  description         String
+  donorBy             user?              @relation("donor", fields: [donorById], references: [id])
+  donorById           String?
+  
+  receiver            user?              @relation("receiver", fields: [receiverId], references: [id])
+  receiverId          String?
+  
+  
+  status              bloodRequestStatus @default(pending)
+  donationCompletedAt DateTime?
+  bloodType           bloodtype          @relation(fields: [bloodTypeId], references: [id])
+  bloodTypeId         String
+}
+
+enum bloodRequestStatus {
+  pending
+  canceled
+  completed
+}
